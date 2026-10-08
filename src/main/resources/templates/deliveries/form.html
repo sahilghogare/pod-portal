@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Delivery</title>
+</head>
+<body>
+
+<h1>Create Delivery</h1>
+
+<form th:action="@{/deliveries}"
+      th:object="${delivery}"
+      method="post">
+
+    <label>Tracking Number</label>
+    <input id="trackingNo" type="text" th:field="*{trackingNo}">
+    <span th:errors="*{trackingNo}"></span>
+
+    <br><br>
+
+    <label>Customer</label>
+    <input id="customer" type="text" th:field="*{customer}">
+    <span th:errors="*{customer}"></span>
+
+    <br><br>
+
+    <label>Address</label>
+    <input id="address" type="text" th:field="*{address}">
+    <span th:errors="*{address}"></span>
+
+    <br><br>
+
+    <label>Item</label>
+    <input id="item" type="text" th:field="*{item}">
+    <span th:errors="*{item}"></span>
+
+    <br><br>
+
+    <button id="save-btn" type="submit">
+        Save Delivery
+    </button>
+
+</form>
+
+</body>
+</html>

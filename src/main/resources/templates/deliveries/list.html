@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Deliveries</title>
+</head>
+<body>
+
+<h1>Delivery List</h1>
+
+<a id="new-delivery-link" href="/deliveries/new">
+    Create New Delivery
+</a>
+
+<table border="1">
+    <tr>
+        <th>Tracking No</th>
+        <th>Customer</th>
+        <th>Address</th>
+        <th>Item</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    <tr th:each="delivery : ${deliveries}">
+        <td th:text="${delivery.trackingNo}"></td>
+        <td th:text="${delivery.customer}"></td>
+        <td th:text="${delivery.address}"></td>
+        <td th:text="${delivery.item}"></td>
+        <td th:text="${delivery.status}"></td>
+        <td>
+            <a th:href="@{/deliveries/{id}(id=${delivery.id})}">
+                View
+            </a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

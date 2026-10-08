@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Delivery Details</title>
+</head>
+<body>
+
+<h1>Delivery Details</h1>
+
+<p>Tracking Number:
+    <span th:text="${delivery.trackingNo}"></span>
+</p>
+
+<p>Customer:
+    <span th:text="${delivery.customer}"></span>
+</p>
+
+<p>Address:
+    <span th:text="${delivery.address}"></span>
+</p>
+
+<p>Item:
+    <span th:text="${delivery.item}"></span>
+</p>
+
+<p>Status:
+    <span th:text="${delivery.status}"></span>
+</p>
+
+<a href="/deliveries">Back to List</a>
+
+</body>
+</html>
