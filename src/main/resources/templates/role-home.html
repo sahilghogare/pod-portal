@@ -2,117 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${roleTitle}">Role Home</title>
-
     <style>
         * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f1f5f9;
-            color: #1e293b;
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 20px 6%;
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
+        body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #1e293b; }
+        header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px 6%; background: white; border-bottom: 1px solid #e2e8f0; }
         header h2 { margin: 0; color: #1d4ed8; }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            padding: 7px 12px;
-            border-radius: 20px;
-            background: #dbeafe;
-            color: #1d4ed8;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .logout {
-            padding: 9px 14px;
-            border: 0;
-            border-radius: 8px;
-            background: #1e293b;
-            color: white;
-            cursor: pointer;
-        }
-
-        main {
-            max-width: 1050px;
-            margin: 45px auto;
-            padding: 0 24px;
-        }
-
-        .welcome {
-            padding: 32px;
-            border-radius: 18px;
-            background: linear-gradient(120deg, #1d4ed8, #6366f1);
-            color: white;
-        }
-
+        .user-info { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .badge { padding: 7px 12px; border-radius: 20px; background: #dbeafe; color: #1d4ed8; font-size: 12px; font-weight: bold; }
+        .logout { padding: 9px 14px; border: 0; border-radius: 8px; background: #1e293b; color: white; cursor: pointer; }
+        main { max-width: 1050px; margin: 45px auto; padding: 0 24px; }
+        .welcome { padding: 32px; border-radius: 18px; background: linear-gradient(120deg, #1d4ed8, #6366f1); color: white; }
         .welcome h1 { margin-top: 0; }
         .welcome p { line-height: 1.6; }
-
         .section-title { margin: 30px 0 16px; }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-            gap: 18px;
-        }
-
-        .card {
-            padding: 24px;
-            border-radius: 14px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04);
-        }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+        .card { padding: 24px; border-radius: 14px; background: white; border: 1px solid #e2e8f0; box-shadow: 0 5px 18px rgba(15,23,42,.04); }
         .card h3 { margin-top: 0; }
-
-        a.action {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            background: #2563eb;
-            color: white;
-            text-decoration: none;
-        }
-
+        a.action { display: inline-block; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: #2563eb; color: white; text-decoration: none; }
+        a.action:hover { background: #1d4ed8; }
         .muted { color: #64748b; line-height: 1.6; }
-
-        @media (max-width: 600px) {
-            header { align-items: flex-start; flex-direction: column; }
-            .welcome { padding: 24px; }
-        }
+        @media(max-width:600px) { header { align-items: flex-start; flex-direction: column; } .welcome { padding: 24px; } }
     </style>
 </head>
 <body>
-
 <header>
     <h2>Proof of Delivery</h2>
-
     <div class="user-info">
         <span th:text="${username}">username</span>
         <span class="badge" th:text="${roleLabel}">Role</span>
-
         <form th:action="@{/logout}" method="post">
             <button class="logout" type="submit">Sign Out</button>
         </form>
@@ -126,12 +45,11 @@
         <p>Signed in as <strong th:text="${username}">username</strong>.</p>
     </section>
 
-    <h2 class="section-title">Your workspace</h2>
-
+    <h2 class="section-title">Your Workspace</h2>
     <div class="grid">
         <section class="card" th:if="${roleCode == 'ADMIN'}">
             <h3>Delivery Records</h3>
-            <p class="muted">View and manage delivery records.</p>
+            <p class="muted">View existing delivery records.</p>
             <a class="action" th:href="@{/deliveries}">View Deliveries</a>
         </section>
 
@@ -141,23 +59,24 @@
             <a class="action" th:href="@{/deliveries/new}">Create Delivery</a>
         </section>
 
+        <section class="card" th:if="${roleCode == 'ADMIN'}">
+            <h3>Delivery Assignment</h3>
+            <p class="muted">Assign created deliveries to an agent.</p>
+            <a class="action" th:href="@{/admin/workflow}">Assign Deliveries</a>
+        </section>
+
         <section class="card" th:if="${roleCode == 'AGENT'}">
             <h3>Assigned Deliveries</h3>
-            <p class="muted">
-                This workspace will display your assigned deliveries
-                when the status workflow is implemented.
-            </p>
+            <p class="muted">View your assigned deliveries and submit proof.</p>
+            <a class="action" th:href="@{/agent/deliveries}">View My Deliveries</a>
         </section>
 
         <section class="card" th:if="${roleCode == 'REVIEWER'}">
             <h3>Proof Review</h3>
-            <p class="muted">
-                This workspace will provide delivery-proof review
-                when the status workflow is implemented.
-            </p>
+            <p class="muted">Verify or reject submitted delivery proof.</p>
+            <a class="action" th:href="@{/reviewer/deliveries}">Review Deliveries</a>
         </section>
     </div>
 </main>
-
 </body>
 </html>
