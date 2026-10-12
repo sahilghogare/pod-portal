@@ -1,23 +1,27 @@
 package edu.podportal;
 
-import edu.podportal.model.DeliveryStatus;
 import edu.podportal.model.Delivery;
+import edu.podportal.model.DeliveryStatus;
 import edu.podportal.repository.DeliveryRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "admin", roles = "ADMIN")
 class DeliveryControllerTests {
 
     @Autowired
@@ -40,7 +44,7 @@ class DeliveryControllerTests {
 
     @Test
     void createDeliverySavesAndRedirects() throws Exception {
-        mockMvc.perform(post("/deliveries")
+        mockMvc.perform(post("/deliveries").with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("trackingNo", "TRK-001")
                         .param("customer", "Sahil")
@@ -57,14 +61,14 @@ class DeliveryControllerTests {
         );
 
         org.junit.jupiter.api.Assertions.assertEquals(
-                "CREATED",
-                delivery.getStatus().name()
+                DeliveryStatus.CREATED,
+                delivery.getStatus()
         );
     }
 
     @Test
     void missingFieldsShowValidationErrors() throws Exception {
-        mockMvc.perform(post("/deliveries")
+        mockMvc.perform(post("/deliveries").with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("trackingNo", "")
                         .param("customer", "")
@@ -87,12 +91,12 @@ class DeliveryControllerTests {
         first.setTrackingNo("TRK-DUP");
         first.setCustomer("Customer 1");
         first.setAddress("Mumbai");
-first.setItem("Phone");
-first.setStatus(DeliveryStatus.CREATED);
+        first.setItem("Phone");
+        first.setStatus(DeliveryStatus.CREATED);
 
-deliveryRepository.save(first);
+        deliveryRepository.save(first);
 
-        mockMvc.perform(post("/deliveries")
+        mockMvc.perform(post("/deliveries").with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("trackingNo", "TRK-DUP")
                         .param("customer", "Customer 2")
