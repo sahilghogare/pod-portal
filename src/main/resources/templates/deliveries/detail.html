@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery Details | POD Portal</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .topbar {
+            background: #1e3a8a;
+            color: white;
+            padding: 18px 5%;
+        }
+
+        .brand {
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .details-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        .card-header {
+            background: #dbeafe;
+            padding: 25px 30px;
+            border-bottom: 1px solid #bfdbfe;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            color: #1e3a8a;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: #475569;
+        }
+
+        .details-body {
+            padding: 30px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .detail-item {
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            min-width: 0;
+        }
+
+        .detail-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 18px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .primary:hover { background: #1d4ed8; }
+
+        .secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .secondary:hover { background: #cbd5e1; }
+
+        @media (max-width: 600px) {
+            .details-grid { grid-template-columns: 1fr; }
+            .detail-item.full { grid-column: auto; }
+            .details-body { padding: 20px; }
+            .card-header { padding: 22px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">POD Portal | Delivery Management</div>
+</header>
+
+<main class="container">
+    <div class="breadcrumb">
+        <a th:href="@{/deliveries}">Deliveries</a> / Delivery Details
+    </div>
+
+    <section class="details-card">
+        <div class="card-header">
+            <h1>Delivery Details</h1>
+            <p class="subtitle">
+                View shipment information and current delivery status.
+            </p>
+        </div>
+
+        <div class="details-body">
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Tracking Number</span>
+                    <div class="detail-value" th:text="${delivery.trackingNo}">
+                        TRK-003
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Customer</span>
+                    <div class="detail-value" th:text="${delivery.customer}">
+                        Customer Name
+                    </div>
+                </div>
+
+                <div class="detail-item full">
+                    <span class="detail-label">Delivery Address</span>
+                    <div class="detail-value" th:text="${delivery.address}">
+                        Delivery Address
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Item</span>
+                    <div class="detail-value" th:text="${delivery.item}">
+                        Item Description
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Current Status</span>
+                    <div>
+                        <span class="status-badge"
+                              th:text="${delivery.status}">
+                            CREATED
+                        </span>
+                    </div>
+                </div>
+
+                <div class="detail-item"
+                     th:if="${delivery.assignedAgent != null}">
+                    <span class="detail-label">Assigned Agent</span>
+                    <div class="detail-value"
+                         th:text="${delivery.assignedAgent}">
+                        Agent
+                    </div>
+                </div>
+
+                <div class="detail-item"
+                     th:if="${delivery.recipientName != null}">
+                    <span class="detail-label">Recipient Name</span>
+                    <div class="detail-value"
+                         th:text="${delivery.recipientName}">
+                        Recipient
+                    </div>
+                </div>
+
+                <div class="detail-item full"
+                     th:if="${delivery.proofNote != null}">
+                    <span class="detail-label">Delivery Proof / Note</span>
+                    <div class="detail-value"
+                         th:text="${delivery.proofNote}">
+                        Delivery note
+                    </div>
+                </div>
+
+                <div class="detail-item full"
+                     th:if="${delivery.rejectionReason != null}">
+                    <span class="detail-label">Rejection Reason</span>
+                    <div class="detail-value"
+                         th:text="${delivery.rejectionReason}">
+                        Rejection reason
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="button primary" th:href="@{/deliveries}">
+                    Back to Deliveries
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

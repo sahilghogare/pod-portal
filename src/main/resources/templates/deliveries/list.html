@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery Tracking | POD Portal</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .topbar {
+            background: #1e3a8a;
+            color: white;
+            padding: 18px 5%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand {
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1450px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-heading {
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            color: #1e3a8a;
+            font-size: 30px;
+            margin: 0 0 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.03);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 11px 17px;
+            border: none;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .primary:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .secondary:hover {
+            background: #475569;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(150px, 220px)) auto auto;
+            align-items: end;
+            gap: 12px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: white;
+            color: #1e293b;
+            font: inherit;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #dbeafe;
+            color: #1e293b;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-created,
+        .status-assigned {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-out_for_delivery {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-delivered {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-verified {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-link {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 28px;
+            color: #64748b;
+        }
+
+        @media (max-width: 950px) {
+            .search-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 550px) {
+            .container {
+                padding: 0 12px;
+                margin: 20px auto;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">POD Portal | Delivery Management</div>
+</header>
+
+<main class="container">
+
+    <section class="page-heading">
+        <h1>Delivery Tracking</h1>
+        <p class="subtitle">Search and manage delivery records.</p>
+    </section>
+
+    <!-- Create Delivery -->
+    <section class="card" th:if="${canCreateDelivery}">
+        <a class="button primary" th:href="@{/deliveries/new}">
+            + Create New Delivery
+        </a>
+    </section>
+
+    <!-- Search and filters -->
+    <section class="card">
+        <form th:action="@{/deliveries}" method="get">
+            <div class="search-grid">
+
+                <div class="field">
+                    <label for="trackingNo">Tracking Number</label>
+                    <input id="trackingNo"
+                           type="text"
+                           name="trackingNo"
+                           placeholder="e.g. TRK-001"
+                           th:value="${param.trackingNo != null ? param.trackingNo[0] : ''}">
+                </div>
+
+                <div class="field">
+                    <label for="customer">Customer</label>
+                    <input id="customer"
+                           type="text"
+                           name="customer"
+                           placeholder="Customer name"
+                           th:value="${param.customer != null ? param.customer[0] : ''}">
+                </div>
+
+                <div class="field">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value=""
+                                th:selected="${param.status == null or param.status[0] == ''}">
+                            All statuses
+                        </option>
+
+                        <option th:each="statusOption : ${statuses}"
+                                th:value="${statusOption.name()}"
+                                th:text="${statusOption.name()}"
+                                th:selected="${param.status != null and param.status[0] == statusOption.name()}">
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="button primary">
+                    Search
+                </button>
+
+                <a th:href="@{/deliveries}" class="button secondary">
+                    Clear
+                </a>
+
+            </div>
+        </form>
+    </section>
+
+    <!-- Delivery records -->
+    <section class="card">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Tracking Number</th>
+                    <th>Customer</th>
+                    <th>Address</th>
+                    <th>Item</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="delivery : ${deliveries}">
+                    <td th:text="${delivery.trackingNo}">TRK-001</td>
+                    <td th:text="${delivery.customer}">Customer Name</td>
+                    <td th:text="${delivery.address}">Address</td>
+                    <td th:text="${delivery.item}">Item</td>
+
+                    <td>
+                        <span class="status"
+                              th:classappend="${' status-' + #strings.toLowerCase(#strings.replace(delivery.status.name(), ' ', '_'))}"
+                              th:text="${delivery.status.name().replace('_', ' ')}">
+                            CREATED
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="actions">
+                            <a class="action-link"
+                               th:href="@{/deliveries/{id}(id=${delivery.id})}">
+                                View
+                            </a>
+
+                            <a class="action-link"
+                               th:if="${canEditDelivery
+                                   and delivery.status.name() != 'DELIVERED'
+                                   and delivery.status.name() != 'VERIFIED'
+                                   and delivery.status.name() != 'REJECTED'}"
+                               th:href="@{/deliveries/{id}/edit(id=${delivery.id})}">
+                                Edit
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(deliveries)}">
+                    <td colspan="6" class="empty-message">
+                        No deliveries found. Try changing your search filters.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Review Delivery Proof</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        h1 { color: #1d4ed8; }
+
+        .notice {
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+        }
+
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+
+        .status {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            max-width: 450px;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 10px 14px;
+            margin: 12px 8px 0 0;
+            border: 0;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .verify { background: #15803d; }
+        .reject { background: #dc2626; }
+        .muted { color: #64748b; }
+    </style>
+</head>
+<body>
+
+<h1>Delivery Proof Review</h1>
+<p class="muted">Review proof submitted by delivery agents.</p>
+<p><a th:href="@{/reviewer/home}">Back to Reviewer Home</a></p>
+
+<div class="notice success"
+     th:if="${successMessage}"
+     th:text="${successMessage}"></div>
+
+<div class="notice error"
+     th:if="${errorMessage}"
+     th:text="${errorMessage}"></div>
+
+<div th:if="${#lists.isEmpty(deliveries)}" class="card">
+    <h3>No deliveries found</h3>
+</div>
+
+<div class="card" th:each="delivery : ${deliveries}">
+    <h2>
+        Tracking Number:
+        <span th:text="${delivery.trackingNo}"></span>
+    </h2>
+
+    <p>
+        <strong>Customer:</strong>
+        <span th:text="${delivery.customer}"></span>
+    </p>
+
+    <p>
+        <strong>Assigned Agent:</strong>
+        <span th:text="${delivery.assignedAgent != null ? delivery.assignedAgent : 'Not assigned'}"></span>
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+        <span class="status" th:text="${delivery.status}"></span>
+    </p>
+
+    <section th:if="${delivery.status.name() == 'DELIVERED'}">
+        <h3>Submitted Proof</h3>
+
+        <p>
+            <strong>Recipient Name:</strong>
+            <span th:text="${delivery.recipientName}"></span>
+        </p>
+
+        <p>
+            <strong>Note or OTP:</strong>
+            <span th:text="${delivery.proofNote}"></span>
+        </p>
+
+        <form th:action="@{/reviewer/deliveries/{id}/verify(id=${delivery.id})}"
+              method="post">
+            <button class="verify" type="submit">Verify Proof</button>
+        </form>
+
+        <form th:action="@{/reviewer/deliveries/{id}/reject(id=${delivery.id})}"
+              method="post">
+
+            <label th:for="'reason-' + ${delivery.id}">Reason for Rejection</label>
+            <input th:id="'reason-' + ${delivery.id}"
+                   name="reason"
+                   type="text"
+                   required
+                   maxlength="1000"
+                   placeholder="Explain why the proof is rejected">
+
+            <button class="reject" type="submit">Reject Proof</button>
+        </form>
+    </section>
+
+    <p th:if="${delivery.status.name() == 'VERIFIED'}"
+       class="success">
+        Proof has been verified.
+    </p>
+
+    <div th:if="${delivery.status.name() == 'REJECTED'}">
+        <p class="error">Proof has been rejected.</p>
+        <p>
+            <strong>Rejection Reason:</strong>
+            <span th:text="${delivery.rejectionReason}"></span>
+        </p>
+    </div>
+
+    <p th:if="${delivery.status.name() != 'DELIVERED'
+                and delivery.status.name() != 'VERIFIED'
+                and delivery.status.name() != 'REJECTED'}"
+       class="muted">
+        Waiting for delivery proof to be submitted.
+    </p>
+</div>
+
+</body>
+</html>
