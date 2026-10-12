@@ -31,6 +31,18 @@ public class Delivery {
     @Column(nullable = false)
     private DeliveryStatus status;
 
+    @Column(name = "assigned_agent")
+    private String assignedAgent;
+
+    @Column(name = "recipient_name")
+    private String recipientName;
+
+    @Column(name = "proof_note", length = 1000)
+    private String proofNote;
+
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
     public Long getId() {
         return id;
     }
@@ -77,5 +89,37 @@ public class Delivery {
 
     public void setStatus(DeliveryStatus status) {
         this.status = status;
+    }
+
+    public String getAssignedAgent() {
+        return assignedAgent;
+    }
+
+    public void setAssignedAgent(String assignedAgent) {
+        this.assignedAgent = assignedAgent;
+    }
+
+    public String getRecipientName() {
+        return recipientName;
+    }
+
+    public void setRecipientName(String recipientName) {
+        this.recipientName = recipientName;
+    }
+
+    public String getProofNote() {
+        return proofNote;
+    }
+
+    public void setProofNote(String proofNote) {
+        this.proofNote = proofNote;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
     }
 }
