@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Update Delivery</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            margin: 30px;
+        }
+
+        .form-card {
+            max-width: 600px;
+            margin: 25px auto;
+            padding: 25px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            margin-top: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button, .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 11px 15px;
+            border: 0;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .back-link {
+            background: #64748b;
+            margin-left: 8px;
+        }
+
+        .back-link:hover {
+            background: #475569;
+        }
+
+        .error {
+            color: #b91c1c;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .error-box {
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            color: #991b1b;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-card">
+
+    <h1>Update Delivery Details</h1>
+
+    <p>Update shipment information before delivery is completed.</p>
+
+    <form th:action="@{/deliveries/{id}/update(id=${delivery.id})}"
+          th:object="${delivery}"
+          method="post">
+
+        <!-- General validation or update errors -->
+        <div class="error-box"
+             th:if="${#fields.hasGlobalErrors()}">
+
+            <p th:each="err : ${#fields.globalErrors()}"
+               th:text="${err}">
+            </p>
+        </div>
+
+        <!-- Tracking Number -->
+        <label for="trackingNo">Tracking Number</label>
+        <input id="trackingNo"
+               type="text"
+               th:field="*{trackingNo}"
+               required>
+
+        <div class="error"
+             th:errors="*{trackingNo}">
+        </div>
+
+        <!-- Customer -->
+        <label for="customer">Customer</label>
+        <input id="customer"
+               type="text"
+               th:field="*{customer}"
+               required>
+
+        <div class="error"
+             th:errors="*{customer}">
+        </div>
+
+        <!-- Address -->
+        <label for="address">Address</label>
+        <input id="address"
+               type="text"
+               th:field="*{address}"
+               required>
+
+        <div class="error"
+             th:errors="*{address}">
+        </div>
+
+        <!-- Item -->
+        <label for="item">Item</label>
+        <input id="item"
+               type="text"
+               th:field="*{item}"
+               required>
+
+        <div class="error"
+             th:errors="*{item}">
+        </div>
+
+        <!-- Submit changes -->
+        <button type="submit">Save Changes</button>
+
+        <!-- Return without saving -->
+        <a class="back-link"
+           th:href="@{/deliveries/{id}(id=${delivery.id})}">
+            Cancel
+        </a>
+
+    </form>
+
+</div>
+
+</body>
+</html>

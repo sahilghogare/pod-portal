@@ -1,45 +1,243 @@
+```html
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <title>Create Delivery</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create Delivery | POD Portal</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .topbar {
+            background: #1e3a8a;
+            color: white;
+            padding: 18px 5%;
+        }
+
+        .brand {
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .breadcrumb a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .form-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 32px;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, 0.05);
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 29px;
+            color: #1e3a8a;
+        }
+
+        .subtitle {
+            margin-bottom: 28px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: #fff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .error-box {
+            padding: 13px;
+            margin-bottom: 20px;
+            border-radius: 7px;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .field-error {
+            color: #b91c1c;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .primary:hover { background: #1d4ed8; }
+
+        .secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .secondary:hover { background: #cbd5e1; }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .field.full { grid-column: auto; }
+            .form-card { padding: 22px; }
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>Create Delivery</h1>
+<header class="topbar">
+    <div class="brand">POD Portal | Delivery Management</div>
+</header>
 
-<form th:action="@{/deliveries}"
-      th:object="${delivery}"
-      method="post">
+<main class="container">
+    <div class="breadcrumb">
+        <a th:href="@{/deliveries}">Deliveries</a> / Create Delivery
+    </div>
 
-    <label>Tracking Number</label>
-    <input id="trackingNo" type="text" th:field="*{trackingNo}">
-    <span th:errors="*{trackingNo}"></span>
+    <section class="form-card">
+        <h1>Create New Delivery</h1>
+        <p class="subtitle">
+            Enter the shipment details below to create a new delivery record.
+        </p>
 
-    <br><br>
+        <form th:action="@{/deliveries}"
+              th:object="${delivery}"
+              method="post">
 
-    <label>Customer</label>
-    <input id="customer" type="text" th:field="*{customer}">
-    <span th:errors="*{customer}"></span>
+            <div class="error-box"
+                 th:if="${#fields.hasGlobalErrors()}">
+                <p th:each="err : ${#fields.globalErrors()}"
+                   th:text="${err}"></p>
+            </div>
 
-    <br><br>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="trackingNo">Tracking Number</label>
+                    <input id="trackingNo"
+                           type="text"
+                           th:field="*{trackingNo}"
+                           placeholder="e.g. TRK-003"
+                           required>
+                    <span class="field-error"
+                          th:errors="*{trackingNo}"></span>
+                </div>
 
-    <label>Address</label>
-    <input id="address" type="text" th:field="*{address}">
-    <span th:errors="*{address}"></span>
+                <div class="field">
+                    <label for="customer">Customer Name</label>
+                    <input id="customer"
+                           type="text"
+                           th:field="*{customer}"
+                           placeholder="Enter customer name"
+                           required>
+                    <span class="field-error"
+                          th:errors="*{customer}"></span>
+                </div>
 
-    <br><br>
+                <div class="field full">
+                    <label for="address">Delivery Address</label>
+                    <input id="address"
+                           type="text"
+                           th:field="*{address}"
+                           placeholder="Enter complete delivery address"
+                           required>
+                    <span class="field-error"
+                          th:errors="*{address}"></span>
+                </div>
 
-    <label>Item</label>
-    <input id="item" type="text" th:field="*{item}">
-    <span th:errors="*{item}"></span>
+                <div class="field full">
+                    <label for="item">Item Description</label>
+                    <input id="item"
+                           type="text"
+                           th:field="*{item}"
+                           placeholder="e.g. Laptop, Mobile, Documents"
+                           required>
+                    <span class="field-error"
+                          th:errors="*{item}"></span>
+                </div>
+            </div>
 
-    <br><br>
+            <div class="actions">
+                <button class="button primary" type="submit">
+                    Save Delivery
+                </button>
 
-    <button id="save-btn" type="submit">
-        Save Delivery
-    </button>
-
-</form>
+                <a class="button secondary" th:href="@{/deliveries}">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </section>
+</main>
 
 </body>
 </html>
+```

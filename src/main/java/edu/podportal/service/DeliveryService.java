@@ -5,7 +5,10 @@ import edu.podportal.model.DeliveryStatus;
 import edu.podportal.repository.DeliveryRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Service
 public class DeliveryService {
@@ -36,6 +39,7 @@ public class DeliveryService {
         return repository.save(delivery);
     }
 
+    // Admin assigns a created delivery to an agent
     public Delivery assignToAgent(Long id, String agentUsername) {
         Delivery delivery = findById(id);
 
@@ -51,6 +55,7 @@ public class DeliveryService {
         return repository.save(delivery);
     }
 
+    // Agent marks their assigned delivery as out for delivery
     public Delivery markOutForDelivery(Long id, String username) {
         Delivery delivery = findById(id);
 
@@ -62,6 +67,7 @@ public class DeliveryService {
         return repository.save(delivery);
     }
 
+    // Agent submits recipient details and delivery proof
     public Delivery submitProof(
             Long id,
             String username,
@@ -90,6 +96,7 @@ public class DeliveryService {
         return repository.save(delivery);
     }
 
+    // Reviewer verifies submitted proof
     public Delivery verifyProof(Long id) {
         Delivery delivery = findById(id);
 
@@ -101,6 +108,7 @@ public class DeliveryService {
         return repository.save(delivery);
     }
 
+    // Reviewer rejects proof and records a reason
     public Delivery rejectProof(Long id, String reason) {
         Delivery delivery = findById(id);
 
@@ -115,6 +123,101 @@ public class DeliveryService {
         delivery.setStatus(DeliveryStatus.REJECTED);
 
         return repository.save(delivery);
+    }
+
+    // Search by tracking number, customer, and status
+    public List<Delivery> search(
+            String trackingNo,
+            String customer,
+            String status) {
+
+        String tracking = normalize(trackingNo);
+        String customerName = normalize(customer);
+        String statusName = normalize(status);
+
+        return findAll().stream()
+                .filter(delivery ->
+                        tracking.isEmpty()
+                                || normalize(delivery.getTrackingNo())
+                                        .contains(tracking))
+                .filter(delivery ->
+                        customerName.isEmpty()
+                                || normalize(delivery.getCustomer())
+                                        .contains(customerName))
+                .filter(delivery ->
+                        statusName.isEmpty()
+                                || (delivery.getStatus() != null
+                                && delivery.getStatus().name()
+                                        .equalsIgnoreCase(statusName)))
+                .toList();
+    }
+
+    // Update delivery details before delivery is completed
+    public Delivery updateDetails(Long id, Delivery changes) {
+        Delivery existing = findById(id);
+
+        if (existing.getStatus() == DeliveryStatus.DELIVERED
+                || existing.getStatus() == DeliveryStatus.VERIFIED
+                || existing.getStatus() == DeliveryStatus.REJECTED) {
+            throw new IllegalStateException(
+                    "Delivery details cannot be updated after delivery");
+        }
+
+        if (changes.getTrackingNo() == null
+                || changes.getCustomer() == null
+                || changes.getAddress() == null
+                || changes.getItem() == null) {
+            throw new IllegalArgumentException(
+                    "All delivery fields are required");
+        }
+
+        String trackingNo = changes.getTrackingNo().trim();
+        String customer = changes.getCustomer().trim();
+        String address = changes.getAddress().trim();
+        String item = changes.getItem().trim();
+
+        if (trackingNo.isEmpty()
+                || customer.isEmpty()
+                || address.isEmpty()
+                || item.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "All delivery fields are required");
+        }
+
+        if (!trackingNo.equals(existing.getTrackingNo())
+                && repository.existsByTrackingNo(trackingNo)) {
+            throw new IllegalArgumentException(
+                    "Tracking number already exists");
+        }
+
+        existing.setTrackingNo(trackingNo);
+        existing.setCustomer(customer);
+        existing.setAddress(address);
+        existing.setItem(item);
+
+        return repository.save(existing);
+    }
+
+    // Count deliveries by status for the summary dashboard
+    public Map<String, Long> statusCounts() {
+        List<Delivery> deliveries = findAll();
+        Map<String, Long> counts = new LinkedHashMap<>();
+
+        for (DeliveryStatus status : DeliveryStatus.values()) {
+            long count = deliveries.stream()
+                    .filter(delivery -> delivery.getStatus() == status)
+                    .count();
+
+            counts.put(status.name(), count);
+        }
+
+        return counts;
+    }
+
+    private String normalize(String value) {
+        return value == null
+                ? ""
+                : value.trim().toLowerCase(Locale.ROOT);
     }
 
     private void requireStatus(
