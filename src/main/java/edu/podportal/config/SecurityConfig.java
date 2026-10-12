@@ -25,17 +25,32 @@ public class SecurityConfig {
                     "/", "/login", "/error",
                     "/css/**", "/images/**", "/actuator/health"
                 ).permitAll()
+
+                // Role-specific pages
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/agent/**").hasRole("AGENT")
                 .requestMatchers("/reviewer/**").hasRole("REVIEWER")
+
+                // Only Admin can create deliveries
                 .requestMatchers(HttpMethod.GET, "/deliveries/new")
                     .hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/deliveries")
                     .hasRole("ADMIN")
+
+                // Only Admin can edit delivery details
+                .requestMatchers(HttpMethod.GET, "/deliveries/*/edit")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/deliveries/*/update")
+                    .hasRole("ADMIN")
+
+                // Admin and Reviewer can view and search deliveries
                 .requestMatchers("/deliveries/**")
                     .hasAnyRole("ADMIN", "REVIEWER")
+
+                // Admin and Reviewer can view the summary dashboard
                 .requestMatchers("/dashboard/**")
                     .hasAnyRole("ADMIN", "REVIEWER")
+
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

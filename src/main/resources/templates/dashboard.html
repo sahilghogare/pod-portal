@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery Summary Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        h1 { color: #1d4ed8; }
+        .summary {
+            background: white;
+            padding: 22px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .total {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+        }
+        th { background: #dbeafe; }
+        a { color: #2563eb; }
+    </style>
+</head>
+<body>
+
+<h1>Delivery Summary Dashboard</h1>
+<p>Overview of deliveries by current status.</p>
+
+<div class="summary">
+    <h2>Total Deliveries</h2>
+    <div class="total" th:text="${totalDeliveries}">0</div>
+</div>
+
+<h2>Deliveries by Status</h2>
+
+<table>
+    <thead>
+    <tr>
+        <th>Status</th>
+        <th>Number of Deliveries</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${statusCounts}">
+        <td th:text="${entry.key}">CREATED</td>
+        <td th:text="${entry.value}">0</td>
+    </tr>
+    </tbody>
+</table>
+
+<p><a th:href="@{/deliveries}">Back to Deliveries</a></p>
+
+</body>
+</html>

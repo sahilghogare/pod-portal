@@ -1,6 +1,7 @@
 package edu.podportal.controller;
 
 import edu.podportal.model.Delivery;
+import edu.podportal.model.DeliveryStatus;
 import edu.podportal.service.DeliveryService;
 
 import jakarta.validation.Valid;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
 
 @Controller
 @RequestMapping("/deliveries")
@@ -22,16 +25,29 @@ public class DeliveryController {
     }
 
     @GetMapping
-    public String list(Model model, Authentication authentication) {
+    public String list(
+            @RequestParam(defaultValue = "") String trackingNo,
+            @RequestParam(defaultValue = "") String customer,
+            @RequestParam(defaultValue = "") String status,
+            Model model,
+            Authentication authentication) {
 
-        model.addAttribute("deliveries", service.findAll());
+        model.addAttribute(
+                "deliveries",
+                service.search(trackingNo, customer, status));
+
+        model.addAttribute("trackingNo", trackingNo);
+        model.addAttribute("customer", customer);
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute(
+                "statuses", Arrays.asList(DeliveryStatus.values()));
 
         boolean isAdmin = authentication != null
                 && authentication.getAuthorities().stream()
-                .anyMatch(authority ->
-                        authority.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         model.addAttribute("canCreateDelivery", isAdmin);
+        model.addAttribute("canEditDelivery", isAdmin);
 
         return "deliveries/list";
     }
@@ -47,12 +63,13 @@ public class DeliveryController {
             @Valid @ModelAttribute("delivery") Delivery delivery,
             BindingResult result) {
 
-        if (service.trackingNumberExists(delivery.getTrackingNo())) {
+        if (delivery.getTrackingNo() != null
+                && service.trackingNumberExists(
+                        delivery.getTrackingNo().trim())) {
             result.rejectValue(
                     "trackingNo",
                     "duplicate",
-                    "Tracking number already exists"
-            );
+                    "Tracking number already exists");
         }
 
         if (result.hasErrors()) {
@@ -60,7 +77,6 @@ public class DeliveryController {
         }
 
         Delivery saved = service.create(delivery);
-
         return "redirect:/deliveries/" + saved.getId();
     }
 
@@ -68,5 +84,34 @@ public class DeliveryController {
     public String detail(@PathVariable Long id, Model model) {
         model.addAttribute("delivery", service.findById(id));
         return "deliveries/detail";
+    }
+
+    @GetMapping("/{id}/edit")
+    public String edit(@PathVariable Long id, Model model) {
+        model.addAttribute("delivery", service.findById(id));
+        model.addAttribute("deliveryId", id);
+        return "deliveries/edit";
+    }
+
+    @PostMapping("/{id}/update")
+    public String update(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("delivery") Delivery delivery,
+            BindingResult result,
+            Model model) {
+
+        if (result.hasErrors()) {
+            model.addAttribute("deliveryId", id);
+            return "deliveries/edit";
+        }
+
+        try {
+            service.updateDetails(id, delivery);
+            return "redirect:/deliveries/" + id;
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            result.reject("updateError", ex.getMessage());
+            model.addAttribute("deliveryId", id);
+            return "deliveries/edit";
+        }
     }
 }
