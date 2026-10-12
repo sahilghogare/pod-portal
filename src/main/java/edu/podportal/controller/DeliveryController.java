@@ -2,7 +2,10 @@ package edu.podportal.controller;
 
 import edu.podportal.model.Delivery;
 import edu.podportal.service.DeliveryService;
+
 import jakarta.validation.Valid;
+
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,8 +22,17 @@ public class DeliveryController {
     }
 
     @GetMapping
-    public String list(Model model) {
+    public String list(Model model, Authentication authentication) {
+
         model.addAttribute("deliveries", service.findAll());
+
+        boolean isAdmin = authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority ->
+                        authority.getAuthority().equals("ROLE_ADMIN"));
+
+        model.addAttribute("canCreateDelivery", isAdmin);
+
         return "deliveries/list";
     }
 

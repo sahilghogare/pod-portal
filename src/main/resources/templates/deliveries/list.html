@@ -1,17 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <title>Deliveries</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery List</title>
 </head>
 <body>
 
 <h1>Delivery List</h1>
 
-<a id="new-delivery-link" href="/deliveries/new">
+<a id="new-delivery-link"
+   th:if="${canCreateDelivery}"
+   href="/deliveries/new">
     Create New Delivery
 </a>
 
 <table border="1">
+    <thead>
     <tr>
         <th>Tracking No</th>
         <th>Customer</th>
@@ -20,7 +25,9 @@
         <th>Status</th>
         <th>Action</th>
     </tr>
+    </thead>
 
+    <tbody>
     <tr th:each="delivery : ${deliveries}">
         <td th:text="${delivery.trackingNo}"></td>
         <td th:text="${delivery.customer}"></td>
@@ -33,6 +40,11 @@
             </a>
         </td>
     </tr>
+
+    <tr th:if="${#lists.isEmpty(deliveries)}">
+        <td colspan="6">No deliveries found.</td>
+    </tr>
+    </tbody>
 </table>
 
 </body>
