@@ -65,3 +65,5 @@ Work follows the branching model and commit convention described in
 | 11-12 | Docker and Jenkins-Docker CD | Planned |
 | 13-14 | Ansible/Puppet and provisioning | Planned |
 | 15 | Final release, documentation and viva | Planned |
+## Jenkins CI Trigger Verification
+This change verifies Jenkins SCM polling on the develop branch.
