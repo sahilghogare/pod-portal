@@ -46,11 +46,4 @@ public class LoginJourneyTest extends BaseSeleniumTest {
                 "Invalid login should display an error message");
     }
 
-    @Test
-    void temporaryFailureForScreenshotEvidence() {
-        driver.get(baseUrl + "/login");
-
-        assertTrue(false, "Temporary failure to verify screenshot capture");
-    }
-
 }
