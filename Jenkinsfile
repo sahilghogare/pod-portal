@@ -50,7 +50,10 @@ pipeline {
                         error "Tomcat webapps directory does not exist: ${params.TOMCAT_WEBAPPS}"
                     }
                 }
-                bat 'copy /Y "target\\pod-portal.war" "%TOMCAT_WEBAPPS%\\pod-portal.war"'
+                withEnv(["DEPLOY_DIR=${params.TOMCAT_WEBAPPS}"]) {
+    bat 'if not exist "%DEPLOY_DIR%" mkdir "%DEPLOY_DIR%"'
+    bat 'copy /Y "target\\pod-portal.war" "%DEPLOY_DIR%\\pod-portal.war"'
+}
             }
         }
     }
