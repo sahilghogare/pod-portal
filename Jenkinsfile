@@ -1,21 +1,27 @@
+
 pipeline {
     agent any
+
+    tools {
+        maven 'Maven3'
+        jdk 'JDK17'
+    }
+
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
 
     parameters {
         string(
             name: 'TOMCAT_WEBAPPS',
             defaultValue: 'C:\\tomcat\\webapps',
-            description: 'Absolute path to the Tomcat webapps directory'
+            description: 'Tomcat webapps folder'
         )
         choice(
             name: 'DEPLOY_ENV',
-            choices: ['dev', 'test', 'prod'],
-            description: 'Deployment environment'
+            choices: ['dev', 'test'],
+            description: 'Target environment'
         )
-    }
-
-    tools {
-        maven 'Maven3'
     }
 
     stages {
@@ -27,40 +33,48 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'mvn -version'
-                bat 'mvn clean test package'
+                bat 'mvn -B clean compile'
             }
         }
 
         stage('Package') {
             steps {
-                archiveArtifacts artifacts: 'target/pod-portal.war',
+                bat 'mvn -B package'
+                archiveArtifacts artifacts: 'target/*.war',
                                  fingerprint: true
+            }
+        }
+
+        stage('Selenium Tests') {
+            steps {
+                bat 'mvn -B test -Pselenium -Dselenium.headless=true'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "Deploying to environment: ${params.DEPLOY_ENV}"
                 script {
-                    if (!fileExists('target/pod-portal.war')) {
-                        error 'WAR file not found: target/pod-portal.war'
-                    }
-                    if (!fileExists(params.TOMCAT_WEBAPPS)) {
-                        error "Tomcat webapps directory does not exist: ${params.TOMCAT_WEBAPPS}"
-                    }
+                    currentBuild.description =
+                        "Deployed to ${params.DEPLOY_ENV}"
                 }
-                bat 'copy /Y "target\\pod-portal.war" "%TOMCAT_WEBAPPS%\\pod-portal.war"'
+                echo "Deploying to ${params.DEPLOY_ENV}: ${params.TOMCAT_WEBAPPS}"
+                bat "copy /Y target\\pod-portal.war \"${params.TOMCAT_WEBAPPS}\\pod-portal.war\""
             }
         }
     }
 
     post {
+        always {
+            junit allowEmptyResults: true,
+                  testResults: 'target/surefire-reports/*.xml'
+            archiveArtifacts artifacts: 'target/selenium-screenshots/*.png',
+                             allowEmptyArchive: true
+        }
         success {
-            echo 'Pipeline completed successfully.'
+            echo 'Pipeline finished: application deployed.'
         }
         failure {
-            echo 'Pipeline failed. Review the stage logs.'
+            echo 'Pipeline failed: deployment was not performed.'
         }
     }
 }
