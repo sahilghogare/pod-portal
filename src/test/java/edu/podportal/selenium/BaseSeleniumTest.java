@@ -17,7 +17,9 @@ public abstract class BaseSeleniumTest {
     protected WebDriverWait wait;
 
     protected final String baseUrl =
-            "http://localhost:8082/pod-portal";
+        System.getProperty(
+                "selenium.baseUrl",
+                "http://localhost:8082/pod-portal");
 
     @BeforeEach
     void setUp() {
