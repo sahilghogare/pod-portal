@@ -57,11 +57,13 @@ pipeline {
                 script {
                     try {
                         bat '''
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$dbUrl = 'jdbc:h2:mem:seleniumdb;DB_CLOSE_DELAY=-1'; $appArgs = @('-jar','target/pod-portal.war','--server.port=8083','--server.servlet.context-path=/pod-portal',('--spring.datasource.url=' + $dbUrl)); $p = Start-Process -FilePath 'java' -ArgumentList $appArgs -PassThru -RedirectStandardOutput 'selenium-app-out.log' -RedirectStandardError 'selenium-app-err.log'; Set-Content -Path selenium-app.pid -Value $p.Id"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$dbUrl = 'jdbc:h2:mem:seleniumdb;DB_CLOSE_DELAY=-1'; $appArgs = @('-jar','target/pod-portal.war','--server.port=8083','--server.servlet.context-path=/pod-portal',('--spring.datasource.url=' + $dbUrl)); $p = Start-Process -FilePath 'java' -ArgumentList $appArgs -PassThru -RedirectStandardOutput 'selenium-app-out.log' -RedirectStandardError 'selenium-app-err.log'; Set-Content -Path selenium-app.pid -Value $p.Id; Start-Sleep -Seconds 2; if ($p.HasExited) { Get-Content selenium-app-out.log -ErrorAction SilentlyContinue; Get-Content selenium-app-err.log -ErrorAction SilentlyContinue; throw 'Test application exited during startup' }"
 '''
+
                         bat '''
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ready = $false; for ($i = 0; $i -lt 60; $i++) { try { $r = Invoke-WebRequest -Uri 'http://localhost:8083/pod-portal/login' -UseBasicParsing -TimeoutSec 2; if ($r.StatusCode -eq 200) { $ready = $true; break } } catch {}; Start-Sleep -Seconds 2 }; if (-not $ready) { Get-Content selenium-app-out.log -ErrorAction SilentlyContinue; Get-Content selenium-app-err.log -ErrorAction SilentlyContinue; throw 'Test application did not become ready on port 8083' }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ready = $false; for ($i = 0; $i -lt 60; $i++) { if (Test-Path selenium-app.pid) { $appId = [int](Get-Content selenium-app.pid); $app = Get-Process -Id $appId -ErrorAction SilentlyContinue; if (-not $app) { break } }; try { $r = Invoke-WebRequest -Uri 'http://localhost:8083/pod-portal/login' -UseBasicParsing -TimeoutSec 2; if ($r.StatusCode -eq 200) { $ready = $true; break } } catch {}; Start-Sleep -Seconds 2 }; if (-not $ready) { Get-Content selenium-app-out.log -ErrorAction SilentlyContinue; Get-Content selenium-app-err.log -ErrorAction SilentlyContinue; throw 'Test application did not become ready on port 8083' }"
 '''
+
                         bat 'mvn -B test -Pselenium -Dselenium.headless=true -Dselenium.baseUrl=http://localhost:8083/pod-portal'
                     } finally {
                         bat '''
