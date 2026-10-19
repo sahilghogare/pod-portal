@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
@@ -6,7 +7,9 @@
     <title>Sign In | Proof of Delivery</title>
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -53,13 +56,17 @@
             font-size: 19px;
         }
 
-        .brand p, .subtitle {
+        .brand p,
+        .subtitle {
             margin: 0;
             color: #64748b;
             font-size: 13px;
         }
 
-        h2 { margin-bottom: 8px; font-size: 27px; }
+        h2 {
+            margin-bottom: 8px;
+            font-size: 27px;
+        }
 
         label {
             display: block;
@@ -94,7 +101,9 @@
             cursor: pointer;
         }
 
-        button:hover { background: #1d4ed8; }
+        button:hover {
+            background: #1d4ed8;
+        }
 
         .alert {
             padding: 12px;
@@ -103,8 +112,15 @@
             font-size: 14px;
         }
 
-        .error { background: #fee2e2; color: #991b1b; }
-        .success { background: #dcfce7; color: #166534; }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
 
         .footer {
             margin-top: 24px;
@@ -114,9 +130,10 @@
         }
     </style>
 </head>
-<body>
 
+<body>
 <div class="login-card">
+
     <div class="brand">
         <div class="brand-icon">✓</div>
         <div>
@@ -127,6 +144,7 @@
 
     <h2>Welcome back</h2>
     <p class="subtitle">Sign in to access your workspace.</p>
+    <p class="subtitle">Welcome to Pod Portal — Delivery Management Made Simple</p>
 
     <div class="alert error" th:if="${loginError}">
         Invalid username or password. Please try again.
@@ -137,6 +155,7 @@
     </div>
 
     <form th:action="@{/login}" method="post">
+
         <label for="username">Username</label>
         <input id="username"
                name="username"
@@ -160,7 +179,7 @@
     <p class="footer">
         Secure access for Admin, Agent and Reviewer
     </p>
-</div>
 
+</div>
 </body>
 </html>
