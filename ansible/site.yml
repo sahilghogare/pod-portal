@@ -1,0 +1,52 @@
+---
+- name: Configure Pod Portal target node
+  hosts: podportal
+  become: true
+
+  vars:
+    app_user: deploy
+    app_dir: /opt/podportal
+
+  tasks:
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - python3-docker
+          - curl
+          - ca-certificates
+        state: present
+        update_cache: true
+
+    - name: Ensure deploy user exists and belongs to docker group
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        groups: docker
+        append: true
+        create_home: true
+        state: present
+
+    - name: Create application directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: "0755"
+      loop:
+        - "{{ app_dir }}"
+        - "{{ app_dir }}/data"
+
+    - name: Create application environment file
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/podportal.env"
+        content: "JAVA_TOOL_OPTIONS=-Xmx384m\n"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: "0640"
+
+    - name: Enable and start Docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
