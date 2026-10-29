@@ -43,6 +43,31 @@ public class Delivery {
     @Column(name = "rejection_reason", length = 1000)
     private String rejectionReason;
 
+    @Column(name = "otp_required")
+    private Boolean otpRequired = false;
+
+    @Column(name = "admin_otp", length = 10)
+    private String adminOtp;
+
+    @Column(name = "otp_hashed", length = 100)
+    private String otpHashed;
+
+    @Column(name = "otp_expiry")
+    private java.time.LocalDateTime otpExpiry;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "otp_status")
+    private OtpStatus otpStatus = OtpStatus.NONE;
+
+    @Column(name = "otp_attempts")
+    private Integer otpAttempts = 0;
+
+    @Column(name = "entered_otp", length = 20)
+    private String enteredOtp;
+
+    @Column(name = "otp_verified_at")
+    private java.time.LocalDateTime otpVerifiedAt;
+
     public Long getId() {
         return id;
     }
@@ -122,4 +147,68 @@ public class Delivery {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
-}
+
+    public Boolean getOtpRequired() {
+        return otpRequired;
+    }
+
+    public void setOtpRequired(Boolean otpRequired) {
+        this.otpRequired = otpRequired;
+    }
+
+    public String getAdminOtp() {
+        return adminOtp;
+    }
+
+    public void setAdminOtp(String adminOtp) {
+        this.adminOtp = adminOtp;
+    }
+
+    public String getOtpHashed() {
+        return otpHashed;
+    }
+
+    public void setOtpHashed(String otpHashed) {
+        this.otpHashed = otpHashed;
+    }
+
+    public java.time.LocalDateTime getOtpExpiry() {
+        return otpExpiry;
+    }
+
+    public void setOtpExpiry(java.time.LocalDateTime otpExpiry) {
+        this.otpExpiry = otpExpiry;
+    }
+
+    public OtpStatus getOtpStatus() {
+        return otpStatus;
+    }
+
+    public void setOtpStatus(OtpStatus otpStatus) {
+        this.otpStatus = otpStatus;
+    }
+
+    public Integer getOtpAttempts() {
+        return otpAttempts;
+    }
+
+    public void setOtpAttempts(Integer otpAttempts) {
+        this.otpAttempts = otpAttempts;
+    }
+
+    public String getEnteredOtp() {
+        return enteredOtp;
+    }
+
+    public void setEnteredOtp(String enteredOtp) {
+        this.enteredOtp = enteredOtp;
+    }
+
+    public java.time.LocalDateTime getOtpVerifiedAt() {
+        return otpVerifiedAt;
+    }
+
+    public void setOtpVerifiedAt(java.time.LocalDateTime otpVerifiedAt) {
+        this.otpVerifiedAt = otpVerifiedAt;
+    }
+}

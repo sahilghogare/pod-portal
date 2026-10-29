@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>My Assigned Deliveries</title>
 
     <style>
@@ -54,6 +56,7 @@
             margin-top: 6px;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
+            box-sizing: border-box;
         }
 
         button {
@@ -64,10 +67,24 @@
             border: 0;
             border-radius: 6px;
             cursor: pointer;
+            font-weight: 600;
         }
 
         button:hover { background: #1d4ed8; }
+        .btn-verify { background: #059669; margin-top: 6px; }
+        .btn-verify:hover { background: #047857; }
         .muted { color: #64748b; }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .badge-verified { background: #dcfce7; color: #166534; }
+        .badge-incorrect { background: #fee2e2; color: #991b1b; }
+        .badge-expired { background: #fef3c7; color: #92400e; }
+        .badge-pending { background: #f1f5f9; color: #475569; }
     </style>
 </head>
 <body>
@@ -115,6 +132,26 @@
         <span class="status" th:text="${delivery.status}"></span>
     </p>
 
+    <div th:if="${delivery.otpRequired}" style="margin: 12px 0;">
+        <strong>OTP Verification:</strong>
+        <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'VERIFIED'}"
+              class="badge badge-verified">
+            ✅ OTP Verified Successfully
+        </span>
+        <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'INCORRECT'}"
+              class="badge badge-incorrect">
+            ❌ Incorrect OTP
+        </span>
+        <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'EXPIRED'}"
+              class="badge badge-expired">
+            ⚠️ OTP Expired
+        </span>
+        <span th:if="${delivery.otpStatus == null or delivery.otpStatus.name() == 'PENDING'}"
+              class="badge badge-pending">
+            ⏳ OTP Pending
+        </span>
+    </div>
+
     <form th:if="${delivery.status.name() == 'ASSIGNED'}"
           th:action="@{/agent/deliveries/{id}/out-for-delivery(id=${delivery.id})}"
           method="post">
@@ -134,10 +171,46 @@
                type="text"
                required>
 
-        <label for="proofNote">Delivery Note or OTP</label>
+        <div th:if="${delivery.otpRequired}" style="margin: 14px 0; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; max-width: 440px;">
+            <label th:for="'otp-' + ${delivery.id}" style="margin-top: 0;">Recipient 6-digit OTP</label>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                <input th:id="'otp-' + ${delivery.id}"
+                       name="otp"
+                       type="text"
+                       maxlength="6"
+                       pattern="[0-9]{6}"
+                       placeholder="Enter 6-digit OTP"
+                       th:value="${delivery.enteredOtp}"
+                       style="margin-top: 0; flex: 1;">
+                <button type="button"
+                        th:id="'verify-btn-' + ${delivery.id}"
+                        th:onclick="'verifyOtp(' + ${delivery.id} + ')'"
+                        class="btn-verify"
+                        style="margin-top: 0; white-space: nowrap;">
+                    Verify OTP
+                </button>
+            </div>
+            <div th:id="'otp-feedback-' + ${delivery.id}" style="margin-top: 8px; font-weight: bold; font-size: 14px;">
+                <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'VERIFIED'}" style="color: #166534;">
+                    ✅ OTP Verified Successfully
+                </span>
+                <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'INCORRECT'}" style="color: #991b1b;">
+                    ❌ Incorrect OTP
+                </span>
+                <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'EXPIRED'}" style="color: #92400e;">
+                    ⚠️ OTP Expired
+                </span>
+                <span th:if="${delivery.otpStatus == null or delivery.otpStatus.name() == 'PENDING'}" style="color: #64748b;">
+                    ⏳ OTP Pending Verification
+                </span>
+            </div>
+        </div>
+
+        <label for="proofNote">Delivery Note or Proof</label>
         <input id="proofNote"
                name="proofNote"
                type="text"
+               placeholder="e.g. Package handed to recipient"
                required>
 
         <button type="submit">Submit Proof and Mark Delivered</button>
@@ -165,6 +238,64 @@
         </p>
     </div>
 </div>
+
+<script>
+function verifyOtp(deliveryId) {
+    const input = document.getElementById('otp-' + deliveryId);
+    const feedback = document.getElementById('otp-feedback-' + deliveryId);
+    const btn = document.getElementById('verify-btn-' + deliveryId);
+    const otpValue = input ? input.value.trim() : '';
+
+    if (!/^\d{6}$/.test(otpValue)) {
+        feedback.innerHTML = '<span style="color: #991b1b;">❌ Please enter exactly 6 digits.</span>';
+        return;
+    }
+
+    feedback.innerHTML = '<span style="color: #2563eb;">Verifying OTP...</span>';
+    btn.disabled = true;
+
+    const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const header = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    if (token && header) {
+        headers[header] = token;
+    }
+
+    const bodyParams = new URLSearchParams();
+    bodyParams.append('otp', otpValue);
+    if (token) {
+        bodyParams.append('_csrf', token);
+    }
+
+    fetch('/agent/deliveries/' + deliveryId + '/verify-otp', {
+        method: 'POST',
+        headers: headers,
+        body: bodyParams.toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        if (data.status === 'VERIFIED') {
+            feedback.innerHTML = '<span style="color: #166534;">✅ OTP Verified Successfully</span>';
+        } else if (data.status === 'INCORRECT') {
+            feedback.innerHTML = '<span style="color: #991b1b;">❌ Incorrect OTP' + (data.attemptsLeft !== undefined ? ' (' + data.attemptsLeft + ' attempts remaining)' : '') + '</span>';
+        } else if (data.status === 'EXPIRED') {
+            feedback.innerHTML = '<span style="color: #92400e;">⚠️ OTP Expired</span>';
+        } else {
+            feedback.innerHTML = '<span style="color: #991b1b;">❌ ' + (data.message || 'Verification failed') + '</span>';
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        feedback.innerHTML = '<span style="color: #991b1b;">❌ Request failed. Please try again.</span>';
+    });
+}
+</script>
 
 </body>
 </html>

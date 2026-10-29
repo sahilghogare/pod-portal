@@ -63,10 +63,13 @@
             border-radius: 6px;
             color: white;
             cursor: pointer;
+            font-weight: 600;
         }
 
         .verify { background: #15803d; }
+        .verify:hover { background: #166534; }
         .reject { background: #dc2626; }
+        .reject:hover { background: #b91c1c; }
         .muted { color: #64748b; }
     </style>
 </head>
@@ -95,8 +98,23 @@
     </h2>
 
     <p>
+        <strong>Delivery ID:</strong>
+        <span th:text="${delivery.id}"></span>
+    </p>
+
+    <p>
         <strong>Customer:</strong>
         <span th:text="${delivery.customer}"></span>
+    </p>
+
+    <p>
+        <strong>Address:</strong>
+        <span th:text="${delivery.address}"></span>
+    </p>
+
+    <p>
+        <strong>Item:</strong>
+        <span th:text="${delivery.item}"></span>
     </p>
 
     <p>
@@ -110,7 +128,7 @@
     </p>
 
     <section th:if="${delivery.status.name() == 'DELIVERED'}">
-        <h3>Submitted Proof</h3>
+        <h3>Submitted Proof &amp; Verification Evidence</h3>
 
         <p>
             <strong>Recipient Name:</strong>
@@ -118,17 +136,51 @@
         </p>
 
         <p>
-            <strong>Note or OTP:</strong>
+            <strong>Delivery Note or Proof:</strong>
             <span th:text="${delivery.proofNote}"></span>
         </p>
 
-        <form th:action="@{/reviewer/deliveries/{id}/verify(id=${delivery.id})}"
-              method="post">
-            <button class="verify" type="submit">Verify Proof</button>
-        </form>
+        <!-- OTP Verification Display for Reviewer -->
+        <div th:if="${delivery.otpRequired}" style="margin: 16px 0; padding: 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; max-width: 500px;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold;">
+                OTP Verification Result
+            </p>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <div th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'VERIFIED'}"
+                     style="display: inline-flex; align-items: center; gap: 8px; color: #166534; background: #dcfce7; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 15px;">
+                    <span>✅</span> <span>OTP Verified Successfully</span>
+                </div>
+                <div th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'INCORRECT'}"
+                     style="display: inline-flex; align-items: center; gap: 8px; color: #991b1b; background: #fee2e2; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 15px;">
+                    <span>❌</span> <span>Incorrect OTP</span>
+                </div>
+                <div th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'EXPIRED'}"
+                     style="display: inline-flex; align-items: center; gap: 8px; color: #92400e; background: #fef3c7; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 15px;">
+                    <span>⚠️</span> <span>OTP Expired</span>
+                </div>
+                <div th:if="${delivery.otpStatus == null or delivery.otpStatus.name() == 'PENDING'}"
+                     style="display: inline-flex; align-items: center; gap: 8px; color: #475569; background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 15px;">
+                    <span>⏳</span> <span>OTP Pending</span>
+                </div>
+            </div>
+
+            <p th:if="${delivery.enteredOtp != null}" style="margin: 8px 0 4px 0; color: #334155;">
+                <strong>OTP Entered by Agent:</strong> <code style="font-size: 15px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;" th:text="${delivery.enteredOtp}"></code>
+            </p>
+            <p th:if="${delivery.otpVerifiedAt != null}" style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">
+                <strong>Verification Timestamp:</strong> <span th:text="${#temporals.format(delivery.otpVerifiedAt, 'yyyy-MM-dd HH:mm:ss')}"></span>
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <form th:action="@{/reviewer/deliveries/{id}/verify(id=${delivery.id})}"
+                  method="post" style="display: inline;">
+                <button class="verify" type="submit">Verify Proof (Approve)</button>
+            </form>
+        </div>
 
         <form th:action="@{/reviewer/deliveries/{id}/reject(id=${delivery.id})}"
-              method="post">
+              method="post" style="margin-top: 15px;">
 
             <label th:for="'reason-' + ${delivery.id}">Reason for Rejection</label>
             <input th:id="'reason-' + ${delivery.id}"
@@ -142,10 +194,22 @@
         </form>
     </section>
 
-    <p th:if="${delivery.status.name() == 'VERIFIED'}"
-       class="success">
-        Proof has been verified.
-    </p>
+    <div th:if="${delivery.status.name() == 'VERIFIED'}"
+         style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 14px; margin-top: 12px; color: #166534;">
+        <h3 style="margin: 0 0 6px 0; color: #166534; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">✅</span>
+            <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'VERIFIED'}">Auto-Verified Successfully via OTP</span>
+            <span th:if="${delivery.otpStatus == null or delivery.otpStatus.name() != 'VERIFIED'}">Proof has been verified and approved.</span>
+        </h3>
+        <p style="margin: 4px 0;" th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'VERIFIED'}">
+            System automatically verified this delivery because the Agent entered the matching 6-digit OTP.
+        </p>
+        <p style="margin: 4px 0;" th:if="${delivery.recipientName != null}"><strong>Recipient:</strong> <span th:text="${delivery.recipientName}"></span></p>
+        <p style="margin: 4px 0;" th:if="${delivery.proofNote != null}"><strong>Delivery Note / Proof:</strong> <span th:text="${delivery.proofNote}"></span></p>
+        <p th:if="${delivery.enteredOtp != null}" style="margin: 4px 0;"><strong>Entered OTP:</strong> <code style="font-size: 15px; background: #bbf7d0; padding: 2px 6px; border-radius: 4px;" th:text="${delivery.enteredOtp}"></code></p>
+        <p th:if="${delivery.otpVerifiedAt != null}" style="margin: 4px 0; font-size: 13px; color: #15803d;"><strong>Verified At:</strong> <span th:text="${#temporals.format(delivery.otpVerifiedAt, 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+    </div>
+
 
     <div th:if="${delivery.status.name() == 'REJECTED'}">
         <p class="error">Proof has been rejected.</p>
