@@ -2,6 +2,7 @@ package edu.podportal.controller;
 
 import edu.podportal.model.Delivery;
 import edu.podportal.model.DeliveryStatus;
+import edu.podportal.model.OtpStatus;
 import edu.podportal.service.DeliveryService;
 
 import jakarta.validation.Valid;
@@ -14,15 +15,21 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 
+import edu.podportal.service.OtpService;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 @Controller
 @RequestMapping("/deliveries")
 public class DeliveryController {
 
     private final DeliveryService service;
+    private final OtpService otpService;
 
-    public DeliveryController(DeliveryService service) {
+    public DeliveryController(DeliveryService service, OtpService otpService) {
         this.service = service;
+        this.otpService = otpService;
     }
+
 
     @GetMapping
     public String list(
@@ -61,7 +68,10 @@ public class DeliveryController {
     @PostMapping
     public String create(
             @Valid @ModelAttribute("delivery") Delivery delivery,
-            BindingResult result) {
+            BindingResult result,
+            @RequestParam(name = "adminOtp", required = false) String adminOtp,
+            @RequestParam(name = "generateOtp", defaultValue = "false") boolean generateOtp,
+            RedirectAttributes redirectAttributes) {
 
         if (delivery.getTrackingNo() != null
                 && service.trackingNumberExists(
@@ -77,8 +87,54 @@ public class DeliveryController {
         }
 
         Delivery saved = service.create(delivery);
+
+        String otpToUse = null;
+        if (adminOtp != null && adminOtp.trim().matches("^\\d{6}$")) {
+            otpToUse = adminOtp.trim();
+        } else if (generateOtp) {
+            otpToUse = otpService.generateSixDigitCode();
+        }
+
+        if (otpToUse != null) {
+            OtpService.OtpGenerationResult otpResult = otpService.assignExplicitOtp(saved, otpToUse);
+            redirectAttributes.addFlashAttribute("generatedOtp", otpResult.getPlainOtp());
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Delivery created! Generated OTP: " + otpResult.getPlainOtp()
+            );
+        }
+
         return "redirect:/deliveries/" + saved.getId();
     }
+
+
+    @PostMapping("/{id}/generate-otp")
+    public String generateOtpForExisting(
+            @PathVariable Long id,
+            @RequestHeader(value = "Referer", required = false) String referer,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            Delivery delivery = service.findById(id);
+            delivery.setOtpStatus(OtpStatus.NONE);
+            delivery.setOtpExpiry(null);
+            OtpService.OtpGenerationResult otpResult = otpService.generateAndAssignOtp(delivery);
+            redirectAttributes.addFlashAttribute("generatedOtp", otpResult.getPlainOtp());
+            redirectAttributes.addFlashAttribute(
+                    "successMessage",
+                    "Generated 6-digit OTP for " + delivery.getTrackingNo() + ": " + otpResult.getPlainOtp()
+            );
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        if (referer != null && referer.contains("/admin/workflow")) {
+            return "redirect:/admin/workflow";
+        }
+        return "redirect:/deliveries/" + id;
+    }
+
+
 
     @GetMapping("/{id}")
     public String detail(@PathVariable Long id, Model model) {

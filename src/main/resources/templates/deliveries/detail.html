@@ -165,6 +165,22 @@
         <a th:href="@{/deliveries}">Deliveries</a> / Delivery Details
     </div>
 
+    <div th:if="${generatedOtp}" style="background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 22px; margin-bottom: 25px; color: #065f46; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span style="font-size: 26px;">🔑</span>
+            <h2 style="margin: 0; font-size: 20px; color: #065f46;">Delivery Verification OTP Generated</h2>
+        </div>
+        <p style="margin: 8px 0; font-size: 16px;">
+            Generated 6-digit OTP: <strong id="generatedOtpDisplay" style="font-size: 26px; letter-spacing: 5px; color: #047857; background: #d1fae5; padding: 4px 14px; border-radius: 8px; font-family: monospace;" th:text="${generatedOtp}">123456</strong>
+        </p>
+        <p style="margin: 6px 0 0; font-size: 13px; color: #047857;">
+            ⚠️ <strong>One-Time Display:</strong> Please share this 6-digit OTP with the recipient outside the portal. For security, this plain OTP is shown only once and cannot be retrieved later.
+        </p>
+    </div>
+
+    <div th:if="${errorMessage}" style="background: #fee2e2; border: 1px solid #f87171; border-radius: 8px; padding: 14px; margin-bottom: 20px; color: #991b1b;" th:text="${errorMessage}">
+    </div>
+
     <section class="details-card">
         <div class="card-header">
             <h1>Delivery Details</h1>
@@ -231,6 +247,42 @@
                     </div>
                 </div>
 
+                <div class="detail-item" th:if="${delivery.otpRequired}">
+                    <span class="detail-label">OTP Verification Status</span>
+                    <div>
+                        <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'VERIFIED'}"
+                              style="display: inline-block; padding: 6px 12px; border-radius: 20px; background: #dcfce7; color: #166534; font-size: 13px; font-weight: bold;">
+                            ✅ OTP Verified Successfully
+                        </span>
+                        <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'INCORRECT'}"
+                              style="display: inline-block; padding: 6px 12px; border-radius: 20px; background: #fee2e2; color: #991b1b; font-size: 13px; font-weight: bold;">
+                            ❌ Incorrect OTP
+                        </span>
+                        <span th:if="${delivery.otpStatus != null and delivery.otpStatus.name() == 'EXPIRED'}"
+                              style="display: inline-block; padding: 6px 12px; border-radius: 20px; background: #fef3c7; color: #92400e; font-size: 13px; font-weight: bold;">
+                            ⚠️ OTP Expired
+                        </span>
+                        <span th:if="${delivery.otpStatus == null or delivery.otpStatus.name() == 'PENDING'}"
+                              style="display: inline-block; padding: 6px 12px; border-radius: 20px; background: #f1f5f9; color: #475569; font-size: 13px; font-weight: bold;">
+                            ⏳ OTP Pending
+                        </span>
+                    </div>
+                </div>
+
+                <div class="detail-item" th:if="${delivery.enteredOtp != null}">
+                    <span class="detail-label">Agent Entered OTP</span>
+                    <div class="detail-value" th:text="${delivery.enteredOtp}">
+                        123456
+                    </div>
+                </div>
+
+                <div class="detail-item" th:if="${delivery.otpVerifiedAt != null}">
+                    <span class="detail-label">OTP Verified At</span>
+                    <div class="detail-value" th:text="${#temporals.format(delivery.otpVerifiedAt, 'yyyy-MM-dd HH:mm:ss')}">
+                        2026-10-28 21:50:00
+                    </div>
+                </div>
+
                 <div class="detail-item full"
                      th:if="${delivery.proofNote != null}">
                     <span class="detail-label">Delivery Proof / Note</span>
@@ -240,13 +292,12 @@
                     </div>
                 </div>
 
-                <div class="detail-item full"
-                     th:if="${delivery.rejectionReason != null}">
-                    <span class="detail-label">Rejection Reason</span>
-                    <div class="detail-value"
-                         th:text="${delivery.rejectionReason}">
-                        Rejection reason
+                <div class="detail-item full" th:if="${delivery.adminOtp != null}" style="border: 2px solid #3b82f6; background: #eff6ff; border-radius: 9px; padding: 18px;">
+                    <span class="detail-label" style="color: #1e40af; font-weight: bold; font-size: 13px;">🔑 6-Digit Delivery OTP (Admin View)</span>
+                    <div class="detail-value" style="font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #1d4ed8; font-family: monospace; margin-top: 4px;" th:text="${delivery.adminOtp}">
+                        123456
                     </div>
+                    <span style="font-size: 13px; color: #3b82f6;">Share this 6-digit code with the agent / recipient to complete delivery.</span>
                 </div>
             </div>
 
@@ -254,9 +305,27 @@
                 <a class="button primary" th:href="@{/deliveries}">
                     Back to Deliveries
                 </a>
+
+                <form th:if="${delivery.adminOtp == null and (delivery.status.name() == 'CREATED' or delivery.status.name() == 'ASSIGNED')}"
+                      th:action="@{/deliveries/{id}/generate-otp(id=${delivery.id})}"
+                      method="post" style="display: inline;">
+                    <button type="submit" class="button primary" style="background: #059669; cursor: pointer;">
+                        🔑 Generate 6-digit OTP
+                    </button>
+                </form>
+
+                <form th:if="${delivery.adminOtp != null and (delivery.status.name() == 'CREATED' or delivery.status.name() == 'ASSIGNED')}"
+                      th:action="@{/deliveries/{id}/generate-otp(id=${delivery.id})}"
+                      method="post" style="display: inline;">
+                    <button type="submit" class="button secondary" style="cursor: pointer;">
+                        🔄 Regenerate 6-digit OTP
+                    </button>
+                </form>
             </div>
         </div>
     </section>
+
+
 </main>
 
 </body>

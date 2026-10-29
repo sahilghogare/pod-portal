@@ -34,16 +34,34 @@
         <th>Customer</th>
         <th>Item</th>
         <th>Status</th>
+        <th>6-digit OTP (Admin View)</th>
         <th>Assigned Agent</th>
         <th>Action</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="delivery : ${deliveries}">
-        <td th:text="${delivery.trackingNo}"></td>
+        <td>
+            <a th:href="@{/deliveries/{id}(id=${delivery.id})}" style="font-weight: bold; color: #2563eb; text-decoration: none;" th:text="${delivery.trackingNo}"></a>
+        </td>
         <td th:text="${delivery.customer}"></td>
         <td th:text="${delivery.item}"></td>
         <td class="status" th:text="${delivery.status}"></td>
+        <td>
+            <div th:if="${delivery.adminOtp != null}" style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-family: monospace; font-size: 17px; font-weight: bold; letter-spacing: 3px; color: #1e40af; background: #eff6ff; border: 1px solid #bfdbfe; padding: 4px 8px; border-radius: 4px;" th:text="${delivery.adminOtp}">123456</span>
+                <form th:if="${delivery.status.name() == 'CREATED' or delivery.status.name() == 'ASSIGNED'}"
+                      th:action="@{/deliveries/{id}/generate-otp(id=${delivery.id})}"
+                      method="post" style="display:inline;">
+                    <button type="submit" title="Regenerate OTP" style="background: #94a3b8; padding: 4px 7px; font-size: 11px; cursor: pointer;">🔄</button>
+                </form>
+            </div>
+            <form th:if="${delivery.adminOtp == null}"
+                  th:action="@{/deliveries/{id}/generate-otp(id=${delivery.id})}"
+                  method="post" style="display:inline;">
+                <button type="submit" style="background: #059669; padding: 7px 11px; font-size: 13px; font-weight: bold; cursor: pointer;">🔑 Generate 6-digit OTP</button>
+            </form>
+        </td>
         <td th:text="${delivery.assignedAgent != null ? delivery.assignedAgent : 'Not assigned'}"></td>
         <td>
             <form th:if="${delivery.status.name() == 'CREATED'}"
@@ -58,8 +76,9 @@
         </td>
     </tr>
     <tr th:if="${#lists.isEmpty(deliveries)}">
-        <td colspan="6">No deliveries available.</td>
+        <td colspan="7">No deliveries available.</td>
     </tr>
+
     </tbody>
 </table>
 
